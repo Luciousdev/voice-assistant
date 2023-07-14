@@ -24,13 +24,20 @@ log_file="pip-install.log"
 
 # Function to log output to the log file
 log() {
-  echo -e "$1" | tee -a "$log_file"
+    echo -e "$1" | tee -a "$log_file"
 }
 
 # Function to handle errors
 handle_error() {
-  log "$CER - An error occurred. Exiting..."
-  exit 1
+    local argument=$1
+
+    if [ $argument == "pip" ]; then
+        log "$CER - An error occurred during the pip installation. Try running the script again with the break-system-packages enabled. Exiting..."
+        exit 1
+    else
+        log "$CER - An error occurred. Exiting..."
+        exit 1
+    fi
 }
 
 
@@ -67,8 +74,18 @@ if [ -f /etc/os-release ]; then
 
         # Install packages from requirements.txt using Pip
         if command -v pip &> /dev/null; then
-            log "$CWR - Installing Python packages from requirements.txt..."
-            pip install -r requirements.txt || handle_error
+            log "$CWR - Installing Python packages from requirements.txt..."   
+
+            # Ask the user if they want to use the '--break-system-packages' argument
+            read -p "Would you like to use the argument '--break-system-packages'? Note: this can cause major issues. [y/n]" arguments
+
+            if [[ $arguments =~ ^[Yy]$ ]]; then
+                # Install Python dependencies
+                pip install --break-system-packages -r requirements.txt || handle_error
+            else 
+                # Install Python dependencies
+                pip install -r requirements.txt || handle_error "pip"
+            fi
         else
             log "$CER - pip installation failed. Please install Pip manually and run 'pip install -r requirements.txt'."
         fi
@@ -79,6 +96,5 @@ if [ -f /etc/os-release ]; then
     fi 
 fi
 
-
-# Install Python dependencies
-pip3 install -r requirements.txt
+log "$COK - Installation of python, pip and or the needed packages were successfull."
+exit 0

@@ -2,3 +2,4 @@
 *.mp3
 .env
 test.py
+*.txt

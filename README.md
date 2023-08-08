@@ -31,6 +31,8 @@ python3 script.py
 
 The script should run fine without any errors.
 
+---
+
 ### Windows
 
 Step 1.  

@@ -3,6 +3,8 @@ from pydub import AudioSegment
 from pydub.playback import play
 import speech_recognition as sr
 import openai
+import datetime
+import webbrowser
 import os
 
 ###################################
@@ -10,12 +12,22 @@ import os
 ###################################
 
 def text_to_speech(text, language='en'):
-    tts = gTTS(text=text, lang=language,  slow=False, lang_check=False)
+    tts = gTTS(text=text, lang=language, tld='com.au', slow=False, lang_check=False)
     tts.save('output.mp3')
     audio = AudioSegment.from_file('output.mp3', format='mp3')
     play(audio)
     # Remove the temporary audio file
     os.remove('output.mp3')
+
+
+
+def ttsJustText(text, language='en'):
+    tts = gTTS(text=text, lang=language, tld='com.au', slow=False, lang_check=False)
+    tts.save('output2.mp3')
+    audio = AudioSegment.from_file('output2.mp3', format='mp3')
+    play(audio)
+    # Remove the temporary audio file
+    os.remove('output2.mp3')
 
 #############################
 # GET RESPONSE FROM CHATGPT #
@@ -41,6 +53,55 @@ def chatgpt(prompt):
     return response  # Return the generated response
 
 
+########################################
+# GET RESPONSES AND DO DESIRED ACTIONS #
+########################################
+
+def answers(user_input):
+    full_text = user_input
+    separated_text = user_input.split(" ")
+
+    # Check if user wants to know the time
+    if all(word in separated_text for word in ["time", "current"]):
+        # Get the current time
+        print("Getting the current time...")
+        current_time = datetime.datetime.now().strftime("%H:%M")
+        return f"The time is {current_time}."
+    
+    # Check if user wants to exit
+    elif all(word in separated_text for word in ["exit", "quit"]):
+        exit()
+
+    # Check if user wants to know the date
+    elif all(word in separated_text for word in ["date", "current"]):
+        # Get the current date
+        current_date = datetime.datetime.now().strftime("%d/%m/%Y")
+        return f"The date is {current_date}."
+    
+    # Check if user wants to know the day
+    elif all(word in separated_text for word in ["day", "current"]):
+        # Get the current day
+        current_day = datetime.datetime.now().strftime("%A")
+        return f"The day is {current_day}."
+    
+    # Check if user wants to search the web
+    elif separated_text[0] == "go" and separated_text[1] == "to":
+        query = ' '.join(separated_text[2:])
+        ttsJustText("Searching for " + query)
+        # check if it is a website
+        if "." in query:
+            webbrowser.open("https://" + query)
+        else:
+            webbrowser.open("https://www.google.com/search?q=" + query)
+        return "Opening your search query in the browser."
+
+    else:
+        # Get a response from ChatGPT
+        response = chatgpt(full_text)
+        return response
+
+
+
 
 #########################
 # LISTER FOR USER INPUT #
@@ -56,28 +117,38 @@ def chat_with_user():
             r.adjust_for_ambient_noise(source)
 
             print("[STATUS] - Listening...")
-            audio = r.listen(source)
+            audio = r.listen(source)  # Increase the timeout as needed
 
-            if "assistant" in r.recognize_google(audio).lower():
-                print("Assistant activated.")
+            try:
+                speech_text = r.recognize_google(audio)
+                print("Recognized:", speech_text)
 
-                try:
-                    print("Listening to user...")
-                    user_audio = r.listen(source, timeout=5)
-                    user_text = r.recognize_google(user_audio)
-                    print("User said:", user_text)
+                if "bitch" in speech_text.lower():
+                    print("Assistant activated.")
 
-                    # Generate assistant's response
-                    assistant_response = chatgpt(user_text)
+                    try:
+                        print("Listening to user...")
+                        user_audio = r.listen(source, timeout=5)
+                        user_text = r.recognize_google(user_audio)
+                        print("User said:", user_text)
 
-                    # Convert assistant's response to speech
-                    text_to_speech(assistant_response)
+                        # Generate assistant's response
+                        assistant_response = chatgpt(user_text)
 
-                except sr.WaitTimeoutError:
-                    print("No speech detected.")
+                        # Convert assistant's response to speech
+                        text_to_speech(assistant_response)
 
-                except sr.UnknownValueError:
-                    print("[ERROR] - Unable to recognize speech.")
+                    except sr.WaitTimeoutError:
+                        print("No speech detected.")
+
+                    except sr.UnknownValueError:
+                        print("[ERROR] - Unable to recognize user speech.")
+
+            except sr.WaitTimeoutError:
+                print("No speech detected within timeout.")
+
+            except sr.UnknownValueError:
+                print("[ERROR] - Unable to recognize speech.")
 
 # Start the conversation loop
 chat_with_user()

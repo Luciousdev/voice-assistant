@@ -5,7 +5,16 @@ import speech_recognition as sr
 import openai
 import datetime
 import webbrowser
+import subprocess
+from dotenv import load_dotenv
 import os
+
+##############################
+# Load environment variables #
+##############################
+
+
+load_dotenv()
 
 ###################################
 # CONVERT CHATGPT RESPONSE TO TTS #
@@ -29,11 +38,12 @@ def ttsJustText(text, language='en'):
     # Remove the temporary audio file
     os.remove('output2.mp3')
 
+
 #############################
 # GET RESPONSE FROM CHATGPT #
 #############################
 
-openai.api_key = 'sk-'
+openai.api_key = 'sk-' + os.getenv('OPENAI_API_KEY')
 
 def chatgpt(prompt):
     start_sequence = "\nA:"
@@ -51,6 +61,23 @@ def chatgpt(prompt):
     # response = response.choices[0].text
     response = response.choices[0].text.strip()
     return response  # Return the generated response
+
+
+######################
+# ANIME PLAY COMMAND #
+######################
+
+def run_ani_cli(command):
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, text=True)
+
+    while True:
+        output = process.stdout.readline()
+        if output == '' and process.poll() is not None:
+            break
+        if output:
+            print(output.strip())
+    
+    return process.poll()
 
 
 ########################################
@@ -84,14 +111,22 @@ def answers(user_input):
         current_day = datetime.datetime.now().strftime("%A")
         return f"The day is {current_day}."
     
+    # Check if user wants to watch an anime
+    elif all(word in separated_text for word in ["watch", "anime"]):
+        anime_name = "".join(separated_text[2:])
+        print(f"Watching anime: {anime_name}")
+        run_ani_cli(f"ani-cli {anime_name}")
+
+    
     # Check if user wants to search the web
     elif separated_text[0] == "go" and separated_text[1] == "to":
         query = ' '.join(separated_text[2:])
-        ttsJustText("Searching for " + query)
         # check if it is a website
         if "." in query:
+            ttsJustText("Going to " + query)
             webbrowser.open("https://" + query)
         else:
+            ttsJustText("Searching for " + query)
             webbrowser.open("https://www.google.com/search?q=" + query)
         return "Opening your search query in the browser."
 
@@ -123,7 +158,7 @@ def chat_with_user():
                 speech_text = r.recognize_google(audio)
                 print("Recognized:", speech_text)
 
-                if "bitch" in speech_text.lower():
+                if "mii" or "me" or "mee" or "amy" in speech_text.lower():
                     print("Assistant activated.")
 
                     try:

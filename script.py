@@ -87,36 +87,31 @@ def run_ani_cli(command):
 def answers(user_input):
     full_text = user_input
     separated_text = user_input.split(" ")
+    # print(separated_text[0])
+    # print(separated_text[1])
 
     # Check if user wants to know the time
-    if all(word in separated_text for word in ["time", "current"]):
+    if "time" in separated_text and "current" in separated_text:
         # Get the current time
         print("Getting the current time...")
         current_time = datetime.datetime.now().strftime("%H:%M")
         return f"The time is {current_time}."
     
     # Check if user wants to exit
-    elif all(word in separated_text for word in ["exit", "quit"]):
+    elif separated_text[0] == "exit" or separated_text[0] == "quit":
         exit()
 
     # Check if user wants to know the date
-    elif all(word in separated_text for word in ["date", "current"]):
+    elif "date" in separated_text and "current" in separated_text:
         # Get the current date
         current_date = datetime.datetime.now().strftime("%d/%m/%Y")
         return f"The date is {current_date}."
     
     # Check if user wants to know the day
-    elif all(word in separated_text for word in ["day", "current"]):
+    elif "day" in separated_text and "current" in separated_text:
         # Get the current day
         current_day = datetime.datetime.now().strftime("%A")
         return f"The day is {current_day}."
-    
-    # Check if user wants to watch an anime
-    elif all(word in separated_text for word in ["watch", "anime"]):
-        anime_name = "".join(separated_text[2:])
-        print(f"Watching anime: {anime_name}")
-        run_ani_cli(f"ani-cli {anime_name}")
-
     
     # Check if user wants to search the web
     elif separated_text[0] == "go" and separated_text[1] == "to":
@@ -129,6 +124,13 @@ def answers(user_input):
             ttsJustText("Searching for " + query)
             webbrowser.open("https://www.google.com/search?q=" + query)
         return "Opening your search query in the browser."
+    
+    # Check if user wants to watch an anime
+    elif all(word in separated_text for word in ["watch", "anime"]):
+        anime_name = "".join(separated_text[2:])
+        print(f"Watching anime: {anime_name}")
+        run_ani_cli(f"ani-cli {anime_name}")
+
 
     else:
         # Get a response from ChatGPT
@@ -168,7 +170,7 @@ def chat_with_user():
                         print("User said:", user_text)
 
                         # Generate assistant's response
-                        assistant_response = chatgpt(user_text)
+                        assistant_response = answers(user_text)
 
                         # Convert assistant's response to speech
                         text_to_speech(assistant_response)

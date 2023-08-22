@@ -168,7 +168,7 @@ def chat_with_user():
                         print("User said:", user_text)
 
                         # Generate assistant's response
-                        assistant_response = chatgpt(user_text)
+                        assistant_response = answers(user_text)
 
                         # Convert assistant's response to speech
                         text_to_speech(assistant_response)

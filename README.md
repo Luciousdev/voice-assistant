@@ -1,5 +1,8 @@
 # voice assistant (with chatgpt integration)
 
+**THIS PROJECT IS BEING CONTINUED AT THE MIKA-PROJECT. SEE THE LINK BELOW FOR MORE DETAILS**
+https://github.com/Mika-Project/mika-assisstant
+
 ## Installation
 
 ### Linux
